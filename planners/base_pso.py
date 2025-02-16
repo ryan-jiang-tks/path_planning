@@ -1,9 +1,12 @@
 import random
 
 class Particle:
-    def __init__(self, dimensions):
-        self.position = [random.uniform(1, 29) for _ in range(dimensions)]
-        self.velocity = [random.uniform(-3, 3) for _ in range(dimensions)]
+    def __init__(self, dimensions, initial_position=None):
+        if initial_position is not None:
+            self.position = list(initial_position)
+        else:
+            self.position = [random.uniform(1, 29) for _ in range(dimensions)]
+        self.velocity = [random.uniform(0, 1) for _ in range(dimensions)]
         self.best_position = list(self.position)
         self.best_value = float('inf')
 
@@ -20,7 +23,8 @@ class Particle:
             self.position[i] += self.velocity[i]
 
 class PSO:
-    def __init__(self, objective_function, dimensions, num_particles, iterations, inertia=0.5, cognitive=1.5, social=1.5):
+    def __init__(self, objective_function, dimensions, num_particles, iterations, 
+                 initial_positions=None, inertia=0.5, cognitive=1.5, social=1.5):
         self.objective_function = objective_function
         self.dimensions = dimensions
         self.num_particles = num_particles
@@ -28,10 +32,18 @@ class PSO:
         self.inertia = inertia
         self.cognitive = cognitive
         self.social = social
-        self.particles = [Particle(dimensions) for _ in range(num_particles)]
-        self.global_best_position = [random.uniform(-1, 1) for _ in range(dimensions)]
+
+        # Initialize particles with provided positions if available
+        self.particles = []
+        for i in range(num_particles):
+            if initial_positions and i < len(initial_positions):
+                self.particles.append(Particle(dimensions, initial_positions[i]))
+            else:
+                self.particles.append(Particle(dimensions))
+
+        self.global_best_position = self.particles[0].position
         self.global_best_value = float('inf')
-        self.iteration_best_positions = []  # Store best position for each iteration
+        self.iteration_best_positions = []
 
     def optimize(self):
         self.iteration_best_positions = []  # Reset history

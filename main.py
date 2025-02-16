@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+import random
 
 from map_generation.voxel_map_generator import create_test_environment
 from planners.path_planner import PathPlanner, PlannerType
@@ -11,7 +12,7 @@ if __name__ == "__main__":
     size = 30
     voxel_grid = create_test_environment(
         size=size,
-        environment_type="outdoor",  # Change to outdoor environment
+        environment_type="cylinder",  # Change to outdoor environment
         num_obstacles=5,
         dilation_size=1  # Reduced dilation size for better detail
     )
@@ -43,17 +44,48 @@ if __name__ == "__main__":
 
     # Get paths using different planners
     astar_path = planner.plan_path(start, goal, PlannerType.ASTAR)
-    rrt_result = planner.plan_path(start, goal, PlannerType.RRT, 
-                                  step_size=1.0, max_iterations=1000) 
-     
-    rrt_path, rrt_vertices = rrt_result if rrt_result[0] is not None else (None, None)
 
+    # Get RRT path first to initialize PSO
+    rrt_result = planner.plan_path(start, goal, PlannerType.RRT, 
+                                 step_size=1.0, max_iterations=1000)
+    if rrt_result and rrt_result[0]:rrt_path, rrt_vertices = rrt_result
+
+# to set a inital position for pso(when the circumstances are not good for pso to find a path)
+    initial_positions = []
+    if rrt_result and rrt_result[0]:
+        rrt_path, _ = rrt_result
+        # Convert RRT path to PSO particle positions
+        num_waypoints = 10
+        if len(rrt_path) > 2:  # If we have waypoints besides start/goal
+            # Sample points from RRT path
+            indices = np.linspace(1, len(rrt_path)-2, num_waypoints, dtype=int)
+            waypoints = [rrt_path[i] for i in indices]
+            
+            # Convert to flat array format for PSO
+            rrt_position = []
+            for point in waypoints:
+                rrt_position.extend(point)
+            
+            # Create variations of RRT path for multiple particles
+            num_particles = 5
+            for i in range(num_particles):
+                # Add random variations to RRT path
+                variation = [p + random.uniform(0, 0.01) for p in rrt_position]
+                initial_positions.append(variation)
+
+
+
+
+    # Run PSO with initial positions(optional)
     pso_result = planner.plan_path(start, goal, PlannerType.PSO,
-                                  num_waypoints= 20,
-                                  num_particles= 30,
-                                  iterations= 100)
-    
-# Visualize A* path
+                                 num_waypoints=10,
+                                 num_particles=30,
+                                 iterations=100,
+                                 initial_positions=initial_positions,
+
+                                 )
+
+    # Visualize A* path
     # if astar_path:
     #     path_grid = np.zeros_like(voxel_grid)
     #     for point in astar_path:

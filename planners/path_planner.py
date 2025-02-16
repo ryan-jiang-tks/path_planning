@@ -88,12 +88,14 @@ class PathPlanner:
         num_waypoints = kwargs.get('num_waypoints', 20)  # Number of intermediate waypoints
         num_particles = kwargs.get('num_particles', 30)
         iterations = kwargs.get('iterations', 100)
+        initial_positions = kwargs.get('initial_positions', None)
         
         pso = PSO(
             objective_function=self._pso_objective_function,
             dimensions=num_waypoints * 3,  # 3 coordinates per waypoint
             num_particles=num_particles,
-            iterations=iterations
+            iterations=iterations,
+            initial_positions=initial_positions
         )
         
         best_position, best_value = pso.optimize()

@@ -128,7 +128,7 @@ class VoxelMapGenerator:
         
         return grid
 
-    def generate_outdoor_environment(self, num_mountains=2, num_trees=5, num_houses=3):
+    def generate_outdoor_environment(self, num_mountains=2, num_trees=2, num_houses=2):
         """Generate an outdoor environment with mountains, trees, and houses"""
         grid = self.create_empty_grid()
         
@@ -139,7 +139,7 @@ class VoxelMapGenerator:
         for _ in range(num_mountains):
             center = (np.random.randint(5, self.size-5), np.random.randint(5, self.size-5))
             height = np.random.randint(self.size-10, self.size-5)
-            radius = np.random.randint(7, 13)
+            radius = np.random.randint(3, 5)
             grid = self.add_mountain(grid, center, height, radius)
         
         # Add trees
@@ -155,14 +155,44 @@ class VoxelMapGenerator:
         
         return grid
 
+    def add_cylinder(self, grid, center, radius, height):
+        """Add a cylinder to the grid"""
+        x_c, y_c = center
+        for x in range(max(0, x_c - radius), min(self.size, x_c + radius + 1)):
+            for y in range(max(0, y_c - radius), min(self.size, y_c + radius + 1)):
+                # Check if point is within circle
+                if (x - x_c) ** 2 + (y - y_c) ** 2 <= radius ** 2:
+                    grid[x, y, :height] = True
+        return grid
+
+    def generate_cylinder_environment(self, num_cylinders=5, min_radius=2, max_radius=5, 
+                                   min_height=5, max_height=15):
+        """Generate an environment with multiple cylinders"""
+        grid = self.create_empty_grid()
+        
+        # Add ground level
+        grid[:, :, 0] = True
+        
+        # Add random cylinders
+        for _ in range(num_cylinders):
+            radius = np.random.randint(min_radius, max_radius + 1)
+            height = np.random.randint(min_height, max_height + 1)
+            center = (
+                np.random.randint(radius + 1, self.size - radius - 1),
+                np.random.randint(radius + 1, self.size - radius - 1)
+            )
+            grid = self.add_cylinder(grid, center, radius, height)
+        
+        return grid
+
 def create_test_environment(size=30, environment_type="random", num_obstacles=5, dilation_size=2):
     """
     Create a test environment with specified parameters
     
     Args:
         size (int): Size of the cubic grid
-        environment_type (str): "random", "maze", "indoor", or "outdoor"
-        num_obstacles (int): Number of random obstacles (for random environment)
+        environment_type (str): "random", "maze", "indoor", "outdoor", or "cylinder"
+        num_obstacles (int): Number of random obstacles or cylinders
         dilation_size (int): Size of obstacle dilation
     """
     generator = VoxelMapGenerator(size)
@@ -176,6 +206,8 @@ def create_test_environment(size=30, environment_type="random", num_obstacles=5,
         grid = generator.generate_indoor_environment()
     elif environment_type == "outdoor":
         grid = generator.generate_outdoor_environment()
+    elif environment_type == "cylinder":
+        grid = generator.generate_cylinder_environment(num_obstacles)
     else:
         raise ValueError("Invalid environment type")
     
