@@ -76,7 +76,7 @@ class PathPlanningBenchmark:
 
     def run_benchmark(self, environment_types=None, planner_configs=None):
         if environment_types is None:
-            environment_types = ["random", "cylinder", "maze", "indoor", "outdoor"]
+            environment_types = ["random", "cylinder", "indoor", "outdoor"]  # Removed "maze"
         
         if planner_configs is None:
             planner_configs = [
@@ -121,7 +121,7 @@ def run_benchmark_example():
     benchmark = PathPlanningBenchmark(size=30, num_tests=5)
     
     # Configure specific environments and planners to test
-    environment_types = ["cylinder", "maze"]
+    environment_types = ["cylinder", "indoor"]  # Removed "maze"
     planner_configs = [
         (PlannerType.ASTAR, {}),
         (PlannerType.RRT, {'step_size': 1.0, 'max_iterations': 1000}),

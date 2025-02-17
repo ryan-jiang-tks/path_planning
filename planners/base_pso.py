@@ -6,7 +6,7 @@ class Particle:
             self.position = list(initial_position)
         else:
             self.position = [random.uniform(1, 29) for _ in range(dimensions)]
-        self.velocity = [random.uniform(0, 1) for _ in range(dimensions)]
+        self.velocity = [random.uniform(-1, 1) for _ in range(dimensions)]
         self.best_position = list(self.position)
         self.best_value = float('inf')
 

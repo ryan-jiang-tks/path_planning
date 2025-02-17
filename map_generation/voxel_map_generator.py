@@ -33,24 +33,6 @@ class VoxelMapGenerator:
         grid[x2, y1:y2+1, z1:z2+1] = True  # Right wall
         return grid
 
-    def generate_maze_environment(self, corridor_width=2):
-        grid = self.create_empty_grid()
-        
-        # Add outer walls
-        grid = self.add_room(grid, (0,0,0), (self.size-1, self.size-1, 5))
-        
-        # Add some internal walls
-        wall_positions = [
-            ((5, 5, 0), (5, 15, 5)),
-            ((15, 15, 0), (25, 15, 5)),
-            ((15, 5, 0), (15, 25, 5))
-        ]
-        
-        for start, end in wall_positions:
-            grid = self.add_wall(grid, start, end)
-            
-        return grid
-
     def generate_indoor_environment(self):
         grid = self.create_empty_grid()
         
@@ -191,7 +173,7 @@ def create_test_environment(size=30, environment_type="random", num_obstacles=5,
     
     Args:
         size (int): Size of the cubic grid
-        environment_type (str): "random", "maze", "indoor", "outdoor", or "cylinder"
+        environment_type (str): "random", "indoor", "outdoor", or "cylinder"
         num_obstacles (int): Number of random obstacles or cylinders
         dilation_size (int): Size of obstacle dilation
     """
@@ -200,8 +182,6 @@ def create_test_environment(size=30, environment_type="random", num_obstacles=5,
     if environment_type == "random":
         grid = generator.create_empty_grid()
         grid = generator.add_random_obstacles(grid, num_obstacles, seed=44)
-    elif environment_type == "maze":
-        grid = generator.generate_maze_environment()
     elif environment_type == "indoor":
         grid = generator.generate_indoor_environment()
     elif environment_type == "outdoor":

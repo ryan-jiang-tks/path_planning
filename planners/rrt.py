@@ -12,20 +12,40 @@ class RRTPlanner:
         self.dimensions = voxel_grid.shape
 
     def is_valid_point(self, point):
-        # Check if point is within bounds and collision-free
-        return (all(0 <= p < d for p, d in zip(point, self.dimensions)) and 
-                not self.voxel_grid[tuple(map(int, point))])
+        """Check if point is within bounds and collision-free"""
+        try:
+            # Convert point to integers for grid checking
+            point_int = tuple(map(int, np.round(point)))
+            
+            # Check bounds
+            if not all(0 <= p < d for p, d in zip(point_int, self.dimensions)):
+                return False
+            
+            # Check collision with some margin for safety
+            x, y, z = point_int
+            for dx in [-1, 0, 1]:
+                for dy in [-1, 0, 1]:
+                    for dz in [-1, 0, 1]:
+                        check_point = (x + dx, y + dy, z + dz)
+                        if (all(0 <= p < d for p, d in zip(check_point, self.dimensions)) and 
+                            self.voxel_grid[check_point]):
+                            return False
+            return True
+        except:
+            return False
 
     def is_valid_edge(self, p1, p2):
-        # Check if the edge between p1 and p2 is collision-free
+        """Check if the edge between p1 and p2 is collision-free"""
         vec = p2 - p1
         distance = np.linalg.norm(vec)
         if distance == 0:
             return True
         
-        # Check points along the edge
-        num_points = int(distance / (self.step_size * 0.5))
-        for i in range(1, num_points):
+        # Increase the number of points to check along the edge
+        num_points = max(int(distance * 2), 10)  # At least 10 points
+        
+        # Check more points along the edge
+        for i in range(num_points + 1):
             point = p1 + (vec * i / num_points)
             if not self.is_valid_point(point):
                 return False

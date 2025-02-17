@@ -41,7 +41,7 @@ def visualize_rrt_path(voxel_grid, rrt_path, rrt_vertices):
         
     fig = plt.figure(figsize=(15, 10))
     ax1 = fig.add_subplot(111, projection='3d')
-    ax1.voxels(voxel_grid, facecolors='lightblue', edgecolor='blue', alpha=0.1)
+    ax1.voxels(voxel_grid, facecolors='blue', edgecolor='k', alpha=0.1)
     
     # Plot full RRT tree
     for vertex, parent in rrt_vertices.items():
@@ -52,7 +52,7 @@ def visualize_rrt_path(voxel_grid, rrt_path, rrt_vertices):
     
     # Plot final path
     path = np.array(rrt_path)
-    ax1.plot(path[:, 0], path[:, 1], path[:, 2], 'r-', linewidth=2, label='Path')
+    ax1.plot(path[:, 0], path[:, 1], path[:, 2], 'r-', linewidth=5, label='Path')
     
     ax1.set_xlabel('X')
     ax1.set_ylabel('Y')

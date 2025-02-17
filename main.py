@@ -32,9 +32,9 @@ def run_path_planning_demo(size=30, visualize=True):
         visualize_environment(voxel_grid)
     
     # A* planning
-    astar_path = planner.plan_path(start, goal, PlannerType.ASTAR)
-    if visualize:
-        visualize_astar_path(voxel_grid, astar_path)
+    # astar_path = planner.plan_path(start, goal, PlannerType.ASTAR)
+    # if visualize:
+    #     visualize_astar_path(voxel_grid, astar_path)
 
     # RRT planning
     rrt_result = planner.plan_path(start, goal, PlannerType.RRT, 
@@ -44,14 +44,14 @@ def run_path_planning_demo(size=30, visualize=True):
 
     # PSO planning with RRT initialization
     initial_positions = create_pso_initial_positions(rrt_result)
-    pso_result = planner.plan_path(start, goal, PlannerType.PSO,
-                                 num_waypoints=10,
-                                 num_particles=30,
-                                 iterations=100,
-                                 initial_positions=initial_positions)
+    # pso_result = planner.plan_path(start, goal, PlannerType.PSO,
+    #                              num_waypoints=10,
+    #                              num_particles=30,
+    #                              iterations=100,
+    #                              initial_positions=initial_positions)
     
-    if visualize:
-        visualize_pso_path(voxel_grid, pso_result, start, goal)
+    # if visualize:
+    #     visualize_pso_path(voxel_grid, pso_result, start, goal)
 
 def create_pso_initial_positions(rrt_result, num_waypoints=10, num_particles=5):
     """Helper function to create PSO initial positions from RRT result"""
@@ -76,7 +76,7 @@ def run_benchmark_evaluation():
     benchmark = PathPlanningBenchmark(size=30, num_tests=5)
     
     # Configure environments and planners to test
-    environment_types = ["cylinder", "maze", "indoor"]
+    environment_types = ["cylinder", "indoor", "outdoor"]  # Removed "maze"
     planner_configs = [
         (PlannerType.ASTAR, {}),
         (PlannerType.RRT, {'step_size': 1.0, 'max_iterations': 1000}),
