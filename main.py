@@ -6,7 +6,8 @@ from visualizers.path_visualizer import (
     visualize_environment,
     visualize_astar_path,
     visualize_rrt_path,
-    visualize_pso_path
+    visualize_pso_path,
+    visualize_dqn_path
 )
 from benchmark import PathPlanningBenchmark
 
@@ -20,7 +21,7 @@ def run_path_planning_demo(size=30, visualize=True):
     )
 
     start = (0, 0, 5)
-    goal = (size-1, size-1, 15)
+    goal = (size-1, size-1, 5)
 
     if voxel_grid[start] or voxel_grid[goal]:
         raise ValueError("Start or goal position is blocked.")
@@ -36,22 +37,41 @@ def run_path_planning_demo(size=30, visualize=True):
     # if visualize:
     #     visualize_astar_path(voxel_grid, astar_path)
 
-    # RRT planning
-    rrt_result = planner.plan_path(start, goal, PlannerType.RRT, 
-                                 step_size=1.0, max_iterations=1000)
-    if visualize and rrt_result and rrt_result[0]:
-        visualize_rrt_path(voxel_grid, *rrt_result)
+    # # RRT planning
+    # rrt_result = planner.plan_path(start, goal, PlannerType.RRT, 
+    #                              step_size=1.0, max_iterations=1000)
+    # if visualize and rrt_result and rrt_result[0]:
+    #     visualize_rrt_path(voxel_grid, *rrt_result)
 
-    # PSO planning with RRT initialization
-    initial_positions = create_pso_initial_positions(rrt_result)
+    # # PSO planning with RRT initialization
+    # initial_positions = create_pso_initial_positions(rrt_result)
+    
+    # # Try both PSO variants
     # pso_result = planner.plan_path(start, goal, PlannerType.PSO,
-    #                              num_waypoints=10,
-    #                              num_particles=30,
-    #                              iterations=100,
-    #                              initial_positions=initial_positions)
+    #                             num_waypoints=10,
+    #                             num_particles=30,
+    #                             iterations=100,
+    #                             initial_positions=initial_positions)
+    
+    # matrix_pso_result = planner.plan_path(start, goal, PlannerType.MATRIX_PSO,
+    #                                    num_waypoints=10,
+    #                                    num_particles=30,
+    #                                    iterations=100,
+    #                                    initial_positions=initial_positions)
     
     # if visualize:
-    #     visualize_pso_path(voxel_grid, pso_result, start, goal)
+    #     if pso_result and pso_result[0]:
+    #         visualize_pso_path(voxel_grid, pso_result, start, goal)
+    #     if matrix_pso_result and matrix_pso_result[0]:
+    #         visualize_pso_path(voxel_grid, matrix_pso_result, start, goal)
+
+    # DQN planning
+    dqn_result = planner.plan_path(start, goal, PlannerType.DQN, 
+                                num_episodes=1000)
+    if visualize and dqn_result and dqn_result[0]:
+        visualize_dqn_path(voxel_grid, dqn_result[0], start, goal)
+
+
 
 def create_pso_initial_positions(rrt_result, num_waypoints=10, num_particles=5):
     """Helper function to create PSO initial positions from RRT result"""
@@ -71,16 +91,19 @@ def create_pso_initial_positions(rrt_result, num_waypoints=10, num_particles=5):
     
     return initial_positions
 
+
+
 def run_benchmark_evaluation():
     """Run comprehensive benchmark evaluation"""
     benchmark = PathPlanningBenchmark(size=30, num_tests=5)
     
     # Configure environments and planners to test
-    environment_types = ["cylinder", "indoor", "outdoor"]  # Removed "maze"
+    environment_types = ["cylinder", "indoor", "outdoor"]
     planner_configs = [
         (PlannerType.ASTAR, {}),
         (PlannerType.RRT, {'step_size': 1.0, 'max_iterations': 1000}),
-        (PlannerType.PSO, {'num_waypoints': 10, 'num_particles': 30, 'iterations': 100})
+        (PlannerType.PSO, {'num_waypoints': 10, 'num_particles': 30, 'iterations': 100}),
+        (PlannerType.MATRIX_PSO, {'num_waypoints': 10, 'num_particles': 30, 'iterations': 100})
     ]
 
     # Run benchmark

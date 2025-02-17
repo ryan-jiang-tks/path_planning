@@ -118,3 +118,42 @@ def visualize_pso_path(voxel_grid, pso_result, start, goal):
     ax.legend()
     plt.title('PSO Path Planning Evolution')
     plt.show()
+
+def visualize_dqn_path(voxel_grid, path, start, goal):
+    """Visualize DQN path in the environment"""
+    if not path:
+        print("No DQN path to visualize")
+        return
+        
+    fig = plt.figure(figsize=(12, 10))
+    ax = fig.add_subplot(111, projection='3d')
+    
+    # Plot obstacles
+    ax.voxels(voxel_grid, facecolors='blue', edgecolor='k', alpha=0.1)
+    
+    # Convert path to numpy array for plotting
+    path = np.array(path)
+    
+    # Plot path
+    ax.plot(path[:, 0], path[:, 1], path[:, 2], 
+            'r-', linewidth=2, label='DQN Path')
+    
+    # Plot waypoints
+    ax.scatter(path[1:-1, 0], path[1:-1, 1], path[1:-1, 2], 
+              color='green', s=100, label='Waypoints')
+    
+    # Plot start and goal
+    ax.scatter(*start, color='blue', s=100, label='Start')
+    ax.scatter(*goal, color='red', s=100, label='Goal')
+    
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
+    ax.legend()
+    plt.title('DQN Path Planning Result')
+    plt.show()
+    
+    # Print path statistics
+    print(f"Path length: {len(path)} points")
+    print(f"Path start: {path[0]}")
+    print(f"Path end: {path[-1]}")

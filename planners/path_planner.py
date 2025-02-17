@@ -2,11 +2,15 @@ from enum import Enum
 from planners.astar import a_star
 from planners.rrt import RRTPlanner
 from planners.base_pso import PSO
+from planners.changed_pso import MatrixPSO
+from planners.dqn_path_planner import plan_path_dqn
 
 class PlannerType(Enum):
     ASTAR = "astar"
     RRT = "rrt"
     PSO = "pso"
+    MATRIX_PSO = "matrix_pso"
+    DQN = "dqn"
 
 class PathPlanner:
     def __init__(self, voxel_grid):
@@ -14,7 +18,9 @@ class PathPlanner:
         self.planners = {
             PlannerType.ASTAR: self._astar_plan,
             PlannerType.RRT: self._rrt_plan,
-            PlannerType.PSO: self._pso_plan
+            PlannerType.PSO: self._pso_plan,
+            PlannerType.MATRIX_PSO: self._matrix_pso_plan,
+            PlannerType.DQN: self._dqn_plan
         }
 
     def _astar_plan(self, start, goal, **kwargs):
@@ -117,6 +123,54 @@ class PathPlanner:
             waypoint_history.append((iter_waypoints, val))
             
         return final_path, waypoint_history
+
+    def _matrix_pso_plan(self, start, goal, **kwargs):
+        self.start = start  # Store start for objective function
+        self.goal = goal    # Store goal for objective function
+        num_waypoints = kwargs.get('num_waypoints', 20)
+        num_particles = kwargs.get('num_particles', 30)
+        iterations = kwargs.get('iterations', 100)
+        initial_positions = kwargs.get('initial_positions', None)
+        
+        # Create bounds for the search space
+        bounds = [(0, self.voxel_grid.shape[0]-1)] * (num_waypoints * 3)
+        
+        pso = MatrixPSO(
+            objective_function=self._pso_objective_function,
+            dimensions=num_waypoints * 3,
+            bounds=bounds,
+            num_particles=num_particles,
+            iterations=iterations,
+            initial_positions=initial_positions,
+            inertia=0.5,
+            cognitive=1.5,
+            social=1.5,
+            inertia_decay=0.99
+        )
+        
+        best_position, best_value = pso.optimize()
+        optimization_history = pso.get_optimization_history()
+        
+        if best_value == float('inf'):
+            return None, None
+
+        # Convert best position to path
+        waypoints = [tuple(map(int, best_position[i:i+3])) 
+                    for i in range(0, len(best_position), 3)]
+        final_path = [start] + waypoints + [goal]
+        
+        # Convert optimization history to waypoint history
+        waypoint_history = []
+        for pos, val in optimization_history:
+            iter_waypoints = [tuple(map(int, pos[i:i+3])) 
+                            for i in range(0, len(pos), 3)]
+            waypoint_history.append((iter_waypoints, val))
+            
+        return final_path, waypoint_history
+
+    def _dqn_plan(self, start, goal, **kwargs):
+        num_episodes = kwargs.get('num_episodes', 1000)
+        return plan_path_dqn(self.voxel_grid, start, goal, num_episodes), None
 
     def plan_path(self, start, goal, planner_type=PlannerType.ASTAR, **kwargs):
         """
