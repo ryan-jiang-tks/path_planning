@@ -36,7 +36,8 @@ class PathPlanningBenchmark:
         vectors = np.diff(path, axis=0)
         angles = np.arccos(np.sum(vectors[:-1] * vectors[1:], axis=1) / 
                          (np.linalg.norm(vectors[:-1], axis=1) * np.linalg.norm(vectors[1:], axis=1)))
-        return np.mean(angles)
+        angles_clean = np.nan_to_num(angles, nan=0)
+        return np.mean(angles_clean)
 
     def run_single_test(self, environment_type: str, planner_type: PlannerType, 
                        start: Tuple[int, int, int], goal: Tuple[int, int, int], **kwargs) -> BenchmarkResult:

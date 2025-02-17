@@ -103,7 +103,7 @@ def run_benchmark_evaluation():
         (PlannerType.ASTAR, {}),
         (PlannerType.RRT, {'step_size': 1.0, 'max_iterations': 1000}),
         (PlannerType.PSO, {'num_waypoints': 10, 'num_particles': 30, 'iterations': 100}),
-        (PlannerType.MATRIX_PSO, {'num_waypoints': 10, 'num_particles': 30, 'iterations': 100})
+        # (PlannerType.MATRIX_PSO, {'num_waypoints': 10, 'num_particles': 30, 'iterations': 100})
     ]
 
     # Run benchmark
@@ -114,8 +114,8 @@ def run_benchmark_evaluation():
 
 if __name__ == "__main__":
     # Choose what to run
-    RUN_DEMO = True
-    RUN_BENCHMARK = False
+    RUN_DEMO = False
+    RUN_BENCHMARK = True
     
     if RUN_DEMO:
         print("\n=== Running Path Planning Demo ===")
