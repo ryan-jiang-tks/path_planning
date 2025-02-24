@@ -39,31 +39,38 @@ class PathPlanningBenchmark:
         angles_clean = np.nan_to_num(angles, nan=0)
         return np.mean(angles_clean)
 
+    def extract_path_from_result(self, planner_type, result):
+        """Helper method to extract path from different planner results"""
+        if not result:
+            return None
+            
+        if planner_type == PlannerType.PSO:
+            return result[0] if result[0] else None
+        elif planner_type in [PlannerType.RRT, PlannerType.MODIFIED_RRT]:
+            return result[0] if result[0] else None
+        else:
+            return result
+
     def run_single_test(self, environment_type: str, planner_type: PlannerType, 
                        start: Tuple[int, int, int], goal: Tuple[int, int, int], **kwargs) -> BenchmarkResult:
         # Create environment
-        voxel_grid = create_test_environment(
+        original_grid, dilated_grid = create_test_environment(
             size=self.size,
             environment_type=environment_type,
-            num_obstacles=5,
-            dilation_size=1
+            num_obstacles=15,
+            dilation_size=2
         )
 
         # Initialize planner
-        planner = PathPlanner(voxel_grid)
+        planner = PathPlanner(dilated_grid)  # Use dilated grid for planning
 
         # Measure execution time
         start_time = time.time()
         result = planner.plan_path(start, goal, planner_type, **kwargs)
         execution_time = time.time() - start_time
 
-        # Extract path from result (handle different return types)
-        if planner_type == PlannerType.PSO:
-            path = result[0] if result and result[0] else None
-        elif planner_type == PlannerType.RRT:
-            path = result[0] if result and result[0] else None
-        else:
-            path = result
+        # Extract path from result
+        path = self.extract_path_from_result(planner_type, result)
 
         # Calculate metrics
         return BenchmarkResult(
@@ -83,6 +90,7 @@ class PathPlanningBenchmark:
             planner_configs = [
                 (PlannerType.ASTAR, {}),
                 (PlannerType.RRT, {'step_size': 1.0, 'max_iterations': 1000}),
+                (PlannerType.MODIFIED_RRT, {'step_size': 1.0, 'max_iterations': 1000}),
                 (PlannerType.PSO, {'num_waypoints': 10, 'num_particles': 30, 'iterations': 100})
             ]
 
@@ -117,15 +125,22 @@ class PathPlanningBenchmark:
 
             print(f"{key:<25} {success_rate:>9.1f}% {avg_time:>11.3f} "
                   f"{avg_length:>11.2f} {avg_smoothness:>11.2f} {avg_points:>11.1f}")
+        
+        # Add visualization
+        from .visualization import plot_benchmark_results, plot_convergence_analysis, plot_performance_radar
+        plot_benchmark_results(self.results)
+        plot_convergence_analysis(self.results)
+        plot_performance_radar(self.results)
 
 def run_benchmark_example():
     benchmark = PathPlanningBenchmark(size=30, num_tests=5)
     
     # Configure specific environments and planners to test
-    environment_types = ["cylinder", "indoor"]  # Removed "maze"
+    environment_types = ["cylinder", "indoor", "outdoor"]
     planner_configs = [
         (PlannerType.ASTAR, {}),
         (PlannerType.RRT, {'step_size': 1.0, 'max_iterations': 1000}),
+        (PlannerType.MODIFIED_RRT, {'step_size': 1.0, 'max_iterations': 1000}),
         (PlannerType.PSO, {'num_waypoints': 10, 'num_particles': 30, 'iterations': 100})
     ]
 

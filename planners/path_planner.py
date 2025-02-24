@@ -8,6 +8,7 @@ from planners.dqn_path_planner import plan_path_dqn
 class PlannerType(Enum):
     ASTAR = "astar"
     RRT = "rrt"
+    MODIFIED_RRT = "modified_rrt"  # Add new planner type
     PSO = "pso"
     MATRIX_PSO = "matrix_pso"
     DQN = "dqn"
@@ -18,6 +19,7 @@ class PathPlanner:
         self.planners = {
             PlannerType.ASTAR: self._astar_plan,
             PlannerType.RRT: self._rrt_plan,
+            PlannerType.MODIFIED_RRT: self._modified_rrt_plan,  # Add new planner
             PlannerType.PSO: self._pso_plan,
             PlannerType.MATRIX_PSO: self._matrix_pso_plan,
             PlannerType.DQN: self._dqn_plan
@@ -44,6 +46,16 @@ class PathPlanner:
                            step_size=step_size,
                            max_iterations=max_iterations)
         return planner.plan()  # Now returns (path, vertices) tuple
+
+    def _modified_rrt_plan(self, start, goal, **kwargs):
+        from .modyfied_rrt import RRTPlanner
+        step_size = kwargs.get('step_size', 1.0)
+        max_iterations = kwargs.get('max_iterations', 1000)
+        
+        planner = RRTPlanner(self.voxel_grid, start, goal, 
+                           step_size=step_size,
+                           max_iterations=max_iterations)
+        return planner.plan()
 
     def _pso_objective_function(self, positions):
         """Objective function for PSO path finding - minimize path length while avoiding obstacles"""

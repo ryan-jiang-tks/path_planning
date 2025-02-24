@@ -43,16 +43,39 @@ def visualize_rrt_path(voxel_grid, rrt_path, rrt_vertices):
     ax1 = fig.add_subplot(111, projection='3d')
     ax1.voxels(voxel_grid, facecolors='blue', edgecolor='k', alpha=0.1)
     
-    # Plot full RRT tree
-    for vertex, parent in rrt_vertices.items():
-        if parent is not None:
-            ax1.plot([parent[0], vertex[0]], 
-                    [parent[1], vertex[1]], 
-                    [parent[2], vertex[2]], 'g-', alpha=0.3)
+    # Plot full RRT tree with different colors based on node type if available
+    for vertex_pos, vertex_data in rrt_vertices.items():
+        # Handle both normal RRT and modified RRT vertex data
+        if isinstance(vertex_data, dict):  # Modified RRT case
+            parent_pos = vertex_data.get('parent')
+            node_type = vertex_data.get('node_type', 'unknown')
+            # Set color based on node type
+            if node_type == 'edge':
+                color = 'r'
+            elif node_type == 'free':
+                color = 'g'
+            else:
+                color = 'y'
+        else:  # Normal RRT case
+            parent_pos = vertex_data
+            color = 'g'
+
+        if parent_pos is not None:
+            ax1.plot([parent_pos[0], vertex_pos[0]], 
+                    [parent_pos[1], vertex_pos[1]], 
+                    [parent_pos[2], vertex_pos[2]], 
+                    color=color, alpha=0.3, linewidth=1)
     
     # Plot final path
     path = np.array(rrt_path)
-    ax1.plot(path[:, 0], path[:, 1], path[:, 2], 'r-', linewidth=5, label='Path')
+    ax1.plot(path[:, 0], path[:, 1], path[:, 2], 
+            'b-', linewidth=2, label='Path')
+    
+    # Plot start and goal points
+    ax1.scatter(path[0,0], path[0,1], path[0,2], 
+               color='g', s=100, label='Start')
+    ax1.scatter(path[-1,0], path[-1,1], path[-1,2], 
+               color='r', s=100, label='Goal')
     
     ax1.set_xlabel('X')
     ax1.set_ylabel('Y')
@@ -65,10 +88,8 @@ def visualize_rrt_path(voxel_grid, rrt_path, rrt_vertices):
     plt.show()
     
     # Print path statistics
-    print(f"RRT path length: {len(rrt_path)} points")
-    print(f"RRT tree size: {len(rrt_vertices)} vertices")
-    print(f"Path start: {rrt_path[0]}")
-    print(f"Path end: {rrt_path[-1]}")
+    print(f"Path length: {len(rrt_path)} points")
+    print(f"Tree size: {len(rrt_vertices)} vertices")
 
 def visualize_pso_path(voxel_grid, pso_result, start, goal):
     """Visualize PSO path and optimization history"""
@@ -157,3 +178,53 @@ def visualize_dqn_path(voxel_grid, path, start, goal):
     print(f"Path length: {len(path)} points")
     print(f"Path start: {path[0]}")
     print(f"Path end: {path[-1]}")
+
+def visualize_formation_path(voxel_grid, all_drone_paths, start, goal):
+    """Visualize paths for drone formation"""
+    if not all_drone_paths or not all_drone_paths[0]:
+        print("No formation path to visualize")
+        return
+
+    # Create figure
+    fig = plt.figure(figsize=(15, 10))
+    ax = fig.add_subplot(111, projection='3d')
+    
+    # Plot obstacles
+    ax.voxels(voxel_grid, facecolors='gray', edgecolor='k', alpha=0.1)
+    
+    # Colors for different drones
+    colors = ['r', 'b', 'g', 'y']
+    
+    # Plot paths for each drone
+    for i, path in enumerate(all_drone_paths):
+        path = np.array(path)
+        ax.plot(path[:, 0], path[:, 1], path[:, 2], 
+                f'{colors[i]}-', linewidth=2, label=f'Drone {i+1}')
+        
+        # Plot formation connections at regular intervals
+        step = max(1, len(path) // 10)  # Show formation at 10 points along path
+        for j in range(0, len(path), step):
+            for k in range(i+1, len(all_drone_paths)):
+                other_path = np.array(all_drone_paths[k])
+                ax.plot([path[j, 0], other_path[j, 0]], 
+                       [path[j, 1], other_path[j, 1]], 
+                       [path[j, 2], other_path[j, 2]], 
+                       'k--', alpha=0.3)
+    
+    # Plot start and goal positions for all drones
+    for i, path in enumerate(all_drone_paths):
+        ax.scatter(path[0][0], path[0][1], path[0][2], 
+                  c=colors[i], marker='o', s=100, label=f'Start {i+1}')
+        ax.scatter(path[-1][0], path[-1][1], path[-1][2], 
+                  c=colors[i], marker='s', s=100, label=f'Goal {i+1}')
+    
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
+    ax.legend()
+    plt.title('Formation Path Planning')
+    
+    # Add formation shape indicator
+    # plt.figtext(0.02, 0.02, f'Formation: {formation_shape}', fontsize=10)
+    
+    plt.show()

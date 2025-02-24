@@ -176,6 +176,9 @@ def create_test_environment(size=30, environment_type="random", num_obstacles=5,
         environment_type (str): "random", "indoor", "outdoor", or "cylinder"
         num_obstacles (int): Number of random obstacles or cylinders
         dilation_size (int): Size of obstacle dilation
+        
+    Returns:
+        tuple: (original_grid, dilated_grid)
     """
     generator = VoxelMapGenerator(size)
     
@@ -191,4 +194,4 @@ def create_test_environment(size=30, environment_type="random", num_obstacles=5,
     else:
         raise ValueError("Invalid environment type")
     
-    return generator.process_environment(grid, dilation_size)
+    return grid, generator.process_environment(grid, dilation_size)
