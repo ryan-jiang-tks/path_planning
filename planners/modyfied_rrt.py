@@ -13,20 +13,25 @@ class Node:
         self.parent = parent
         self.env_vector = None
         self.node_type = None
+        self.cost_from_start = float('inf')
+        self.cost_to_goal = float('inf')
 
 class RRTPlanner:
-    def __init__(self, voxel_grid, start, goal, step_size=1.0, max_iterations=1000):
+    def __init__(self, voxel_grid, start, goal, step_size=1.0, max_iterations=1000, search_radius=3.0):
         self.voxel_grid = voxel_grid
         self.dimensions = voxel_grid.shape
         self.start = np.array(start)
         self.goal = np.array(goal)
         self.step_size = step_size
         self.max_iterations = max_iterations
+        self.search_radius = search_radius
 
         # Initialize start node with environment information
         start_node = Node(tuple(start))
         start_node.env_vector = self._get_environment_vector(start)
         start_node.node_type = self._classify_node(start_node.env_vector)
+        start_node.cost_from_start = 0
+        start_node.cost_to_goal = np.linalg.norm(self.goal - self.start)
         self.vertices = {tuple(start): start_node}
         
         
@@ -274,21 +279,77 @@ class RRTPlanner:
             
         return tuple(np.array(current_point) + combined_dir * self.step_size)
 
+    def _find_compatible_neighbors(self, position, radius):
+        """Find neighbors within radius that satisfy environment constraints"""
+        neighbors = []
+        pos_array = np.array(position)
+        for vertex_pos, node in self.vertices.items():
+            if np.linalg.norm(np.array(vertex_pos) - pos_array) <= radius:
+                direction = pos_array - np.array(vertex_pos)
+                if np.linalg.norm(direction) > 0:
+                    direction = direction / np.linalg.norm(direction)
+                    if self._check_direction_compatibility(node.env_vector, direction):
+                        neighbors.append(node)
+        return neighbors
+
+    def _get_path_cost(self, from_pos, to_pos):
+        """Calculate cost between two positions"""
+        return np.linalg.norm(np.array(from_pos) - np.array(to_pos))
+
     def plan(self):
         for _ in range(self.max_iterations):
-            # if np.random.random() < 0.1:
-            #     random_point = self.goal
-            # else:
-            #     random_point = self.sample_random_point()
-
             random_point = self.sample_random_point()
-
             nearest = self.find_nearest_vertex(random_point)
             new_node = self.extend_tree(nearest, random_point)
 
             if new_node is not None and new_node.position not in self.vertices:
-                # Add the new node to vertices
+                # Find compatible neighbors
+                neighbors = self._find_compatible_neighbors(new_node.position, self.search_radius)
+                
+                # Initialize costs
+                parent_node = self.vertices[nearest]
+                min_cost = parent_node.cost_from_start + self._get_path_cost(parent_node.position, new_node.position)
+                best_parent = nearest
+
+                # Find best parent among neighbors
+                for neighbor in neighbors:
+                    potential_cost = (neighbor.cost_from_start + 
+                                   self._get_path_cost(neighbor.position, new_node.position))
+                    
+                    if potential_cost < min_cost:
+                        # Verify edge validity
+                        is_valid, _ = self.is_valid_edge(
+                            np.array(neighbor.position), 
+                            np.array(new_node.position)
+                        )
+                        if is_valid:
+                            min_cost = potential_cost
+                            best_parent = neighbor.position
+
+                # Update node with best parent and costs
+                new_node.parent = best_parent
+                new_node.cost_from_start = min_cost
+                new_node.cost_to_goal = np.linalg.norm(self.goal - np.array(new_node.position))
+                
+                # Add node to vertices
                 self.vertices[new_node.position] = new_node
+
+                # Try to rewire neighbors through new node
+                for neighbor in neighbors:
+                    if neighbor.position != new_node.parent:
+                        potential_cost = (new_node.cost_from_start + 
+                                       self._get_path_cost(new_node.position, neighbor.position))
+                        
+                        if potential_cost < neighbor.cost_from_start:
+                            # Verify edge validity and direction compatibility
+                            direction = np.array(neighbor.position) - np.array(new_node.position)
+                            direction = direction / np.linalg.norm(direction)
+                            
+                            if (self._check_direction_compatibility(new_node.env_vector, direction) and
+                                self.is_valid_edge(np.array(new_node.position), 
+                                                np.array(neighbor.position))[0]):
+                                neighbor.parent = new_node.position
+                                neighbor.cost_from_start = potential_cost
 
                 # Try to connect to goal without adding intermediate nodes
                 # if np.linalg.norm(np.array(new_node.position) - self.goal) < self.step_size:
@@ -340,7 +401,9 @@ class RRTPlanner:
                 'position': node.position,
                 'parent': node.parent,
                 'env_vector': node.env_vector.tolist(),
-                'node_type': node.node_type.value
+                'node_type': node.node_type.value,
+                'cost_from_start': node.cost_from_start,
+                'cost_to_goal': node.cost_to_goal
             }
             for pos, node in self.vertices.items()
         }

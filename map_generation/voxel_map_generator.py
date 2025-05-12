@@ -147,13 +147,16 @@ class VoxelMapGenerator:
                     grid[x, y, :height] = True
         return grid
 
-    def generate_cylinder_environment(self, num_cylinders=5, min_radius=2, max_radius=5, 
+    def generate_cylinder_environment(self, num_cylinders=5, min_radius=5, max_radius=5, 
                                    min_height=5, max_height=15):
         """Generate an environment with multiple cylinders"""
         grid = self.create_empty_grid()
         
         # Add ground level
         grid[:, :, 0] = True
+
+        min_height=self.size/2
+        max_height=self.size-3
         
         # Add random cylinders
         for _ in range(num_cylinders):

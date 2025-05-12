@@ -7,10 +7,10 @@ from planners.dqn_path_planner import plan_path_dqn
 
 class PlannerType(Enum):
     ASTAR = "astar"
-    RRT = "rrt"
-    MODIFIED_RRT = "modified_rrt"  # Add new planner type
+    RRT = "RRT  "
+    MODIFIEDRRT = "modifiedRRT"  # Add new planner type
     PSO = "pso"
-    MATRIX_PSO = "matrix_pso"
+    MATRIX_PSO = "matrixPso"
     DQN = "dqn"
 
 class PathPlanner:
@@ -19,7 +19,7 @@ class PathPlanner:
         self.planners = {
             PlannerType.ASTAR: self._astar_plan,
             PlannerType.RRT: self._rrt_plan,
-            PlannerType.MODIFIED_RRT: self._modified_rrt_plan,  # Add new planner
+            PlannerType.MODIFIEDRRT: self._modified_rrt_plan,  # Add new planner
             PlannerType.PSO: self._pso_plan,
             PlannerType.MATRIX_PSO: self._matrix_pso_plan,
             PlannerType.DQN: self._dqn_plan

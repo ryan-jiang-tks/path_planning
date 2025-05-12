@@ -13,7 +13,7 @@ from visualizers.path_visualizer import (
 from benchmark import PathPlanningBenchmark
 from planners.formation_astar import plan_formation_astar
 
-def run_path_planning_demo(size=100, visualize=True, planners_config=None):
+def run_path_planning_demo(size=30, visualize=True, planners_config=None):
     """
     Run the path planning demonstration
     Args:
@@ -23,8 +23,8 @@ def run_path_planning_demo(size=100, visualize=True, planners_config=None):
     """
     original_grid, dilated_grid = create_test_environment(
         size=size,
-        environment_type="random",
-        num_obstacles=20,
+        environment_type="cylinder",
+        num_obstacles=5,
         dilation_size=3
     )
 
@@ -43,7 +43,7 @@ def run_path_planning_demo(size=100, visualize=True, planners_config=None):
     # Default planner if none specified
     if planners_config is None:
         planners_config = [
-            (PlannerType.MODIFIED_RRT, {'step_size': 1.0, 'max_iterations': 1000})
+            (PlannerType.MODIFIEDRRT, {'step_size': 1.0, 'max_iterations': 1000})
         ]
     
     # Run each specified planner
@@ -52,7 +52,7 @@ def run_path_planning_demo(size=100, visualize=True, planners_config=None):
         result = planner.plan_path(start, goal, planner_type, **params)
         
         if result and result[0]:
-            if planner_type in [PlannerType.RRT, PlannerType.MODIFIED_RRT]:
+            if planner_type in [PlannerType.RRT, PlannerType.MODIFIEDRRT]:
                 visualize_rrt_path(original_grid, *result)  # Use original grid for visualization
             elif planner_type == PlannerType.PSO:
                 visualize_pso_path(original_grid, result, start, goal)  # Use original grid for visualization
@@ -84,14 +84,14 @@ def create_pso_initial_positions(rrt_result, num_waypoints=10, num_particles=5):
 
 def run_benchmark_evaluation():
     """Run comprehensive benchmark evaluation"""
-    benchmark = PathPlanningBenchmark(size=100, num_tests=10)
+    benchmark = PathPlanningBenchmark(size=30, num_tests=10)
     
     # Configure environments and planners to test
     environment_types = ["cylinder", "indoor", "outdoor"]
     planner_configs = [
         (PlannerType.ASTAR, {}),
         (PlannerType.RRT, {'step_size': 1.0, 'max_iterations': 1000}),
-        (PlannerType.MODIFIED_RRT, {'step_size': 1.0, 'max_iterations': 1000}),
+        (PlannerType.MODIFIEDRRT, {'step_size': 1.0, 'max_iterations': 1000}),
         (PlannerType.PSO, {'num_waypoints': 10, 'num_particles': 30, 'iterations': 100}),
     ]
 
@@ -130,13 +130,13 @@ def run_formation_demo(size=30):
 
 if __name__ == "__main__":
     # Choose what to run
-    RUN_DEMO = False
-    RUN_FORMATION = False
-    RUN_BENCHMARK = True
+    RUN_DEMO = 1
+    RUN_FORMATION = 0
+    RUN_BENCHMARK = 0
     
     # Select which planners to run with their parameters
     PLANNERS_TO_RUN = [
-        (PlannerType.MODIFIED_RRT, {'step_size': 1.0, 'max_iterations': 1000}),
+        (PlannerType.MODIFIEDRRT, {'step_size': 1.0, 'max_iterations': 1000}),
         # (PlannerType.ASTAR, {}),
         # (PlannerType.RRT, {'step_size': 1.0, 'max_iterations': 1000}),
         # (PlannerType.PSO, {
@@ -154,6 +154,8 @@ if __name__ == "__main__":
     if RUN_BENCHMARK:
         print("\n=== Running Benchmark Evaluation ===")
         run_benchmark_evaluation()
+
+
     if RUN_FORMATION:
         print("\n=== Running Formation Path Planning Demo ===")
         run_formation_demo()

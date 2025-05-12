@@ -16,7 +16,7 @@ class BenchmarkResult:
     num_waypoints: int
 
 class PathPlanningBenchmark:
-    def __init__(self, size=30, num_tests=10):
+    def __init__(self, size=100, num_tests=10):
         self.size = size
         self.num_tests = num_tests
         self.results: Dict[str, List[BenchmarkResult]] = {}
@@ -46,7 +46,7 @@ class PathPlanningBenchmark:
             
         if planner_type == PlannerType.PSO:
             return result[0] if result[0] else None
-        elif planner_type in [PlannerType.RRT, PlannerType.MODIFIED_RRT]:
+        elif planner_type in [PlannerType.RRT, PlannerType.MODIFIEDRRT]:
             return result[0] if result[0] else None
         else:
             return result
@@ -57,8 +57,8 @@ class PathPlanningBenchmark:
         original_grid, dilated_grid = create_test_environment(
             size=self.size,
             environment_type=environment_type,
-            num_obstacles=15,
-            dilation_size=2
+            num_obstacles=5,
+            dilation_size=1
         )
 
         # Initialize planner
@@ -90,7 +90,7 @@ class PathPlanningBenchmark:
             planner_configs = [
                 (PlannerType.ASTAR, {}),
                 (PlannerType.RRT, {'step_size': 1.0, 'max_iterations': 1000}),
-                (PlannerType.MODIFIED_RRT, {'step_size': 1.0, 'max_iterations': 1000}),
+                (PlannerType.MODIFIEDRRT, {'step_size': 1.0, 'max_iterations': 1000}),
                 (PlannerType.PSO, {'num_waypoints': 10, 'num_particles': 30, 'iterations': 100})
             ]
 
@@ -133,14 +133,14 @@ class PathPlanningBenchmark:
         plot_performance_radar(self.results)
 
 def run_benchmark_example():
-    benchmark = PathPlanningBenchmark(size=30, num_tests=5)
+    benchmark = PathPlanningBenchmark(size=300, num_tests=5)
     
     # Configure specific environments and planners to test
     environment_types = ["cylinder", "indoor", "outdoor"]
     planner_configs = [
         (PlannerType.ASTAR, {}),
         (PlannerType.RRT, {'step_size': 1.0, 'max_iterations': 1000}),
-        (PlannerType.MODIFIED_RRT, {'step_size': 1.0, 'max_iterations': 1000}),
+        (PlannerType.MODIFIEDRRT, {'step_size': 1.0, 'max_iterations': 1000}),
         (PlannerType.PSO, {'num_waypoints': 10, 'num_particles': 30, 'iterations': 100})
     ]
 

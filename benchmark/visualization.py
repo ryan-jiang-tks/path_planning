@@ -51,7 +51,7 @@ def plot_benchmark_results(results: Dict[str, List[BenchmarkResult]]):
 def plot_convergence_analysis(results: Dict[str, List[BenchmarkResult]]):
     """Plot convergence analysis for iterative planners (PSO, RRT)"""
     # Filter for iterative planners
-    iterative_planners = ['pso', 'rrt']
+    iterative_planners = ['pso', 'RRT', 'modifiedRRT']
     
     # Create new window
     plt.figure(figsize=(10, 6))
